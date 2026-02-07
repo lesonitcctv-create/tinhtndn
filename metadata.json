@@ -1,0 +1,5 @@
+{
+  "name": "BizFinance Pro",
+  "description": "Ứng dụng quản lý tài chính doanh nghiệp, theo dõi hóa đơn đầu vào/ra, tính toán thuế và lợi nhuận tích hợp AI phân tích.",
+  "requestFramePermissions": []
+}
