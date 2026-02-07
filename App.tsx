@@ -82,6 +82,28 @@ enum Tab {
   AI_REPORT = 'ai_report'
 }
 
+interface NavItemProps {
+  tab: Tab;
+  label: string;
+  icon: any;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ tab, label, icon: Icon, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium mb-1
+      ${isActive 
+        ? 'bg-blue-600 text-white shadow-md' 
+        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+      }`}
+  >
+    <Icon size={20} />
+    {label}
+  </button>
+);
+
 const App: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>(MOCK_INVOICES);
   const [activeTab, setActiveTab] = useState<Tab>(Tab.DASHBOARD);
@@ -98,22 +120,10 @@ const App: React.FC = () => {
     setInvoices(prev => prev.filter(inv => inv.id !== id));
   };
 
-  const NavItem = ({ tab, label, icon: Icon }: { tab: Tab, label: string, icon: any }) => (
-    <button
-      onClick={() => {
-        setActiveTab(tab);
-        setIsMobileMenuOpen(false);
-      }}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium mb-1
-        ${activeTab === tab 
-          ? 'bg-blue-600 text-white shadow-md' 
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-        }`}
-    >
-      <Icon size={20} />
-      {label}
-    </button>
-  );
+  const handleNavClick = (tab: Tab) => {
+    setActiveTab(tab);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
@@ -126,9 +136,27 @@ const App: React.FC = () => {
           </h1>
         </div>
         <nav className="flex-1 p-4">
-          <NavItem tab={Tab.DASHBOARD} label="Tổng Quan" icon={LayoutDashboard} />
-          <NavItem tab={Tab.INVOICES} label="Quản Lý Hóa Đơn" icon={FileText} />
-          <NavItem tab={Tab.AI_REPORT} label="Phân Tích AI" icon={PieChart} />
+          <NavItem 
+            tab={Tab.DASHBOARD} 
+            label="Tổng Quan" 
+            icon={LayoutDashboard} 
+            isActive={activeTab === Tab.DASHBOARD}
+            onClick={() => handleNavClick(Tab.DASHBOARD)}
+          />
+          <NavItem 
+            tab={Tab.INVOICES} 
+            label="Quản Lý Hóa Đơn" 
+            icon={FileText} 
+            isActive={activeTab === Tab.INVOICES}
+            onClick={() => handleNavClick(Tab.INVOICES)}
+          />
+          <NavItem 
+            tab={Tab.AI_REPORT} 
+            label="Phân Tích AI" 
+            icon={PieChart} 
+            isActive={activeTab === Tab.AI_REPORT}
+            onClick={() => handleNavClick(Tab.AI_REPORT)}
+          />
         </nav>
         <div className="p-4 text-xs text-slate-500 border-t border-slate-800">
             <p>&copy; 2024 BizFinance App</p>
@@ -150,9 +178,27 @@ const App: React.FC = () => {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-slate-900 z-10 pt-16 px-4 pb-4 md:hidden">
             <nav className="space-y-2">
-                <NavItem tab={Tab.DASHBOARD} label="Tổng Quan" icon={LayoutDashboard} />
-                <NavItem tab={Tab.INVOICES} label="Quản Lý Hóa Đơn" icon={FileText} />
-                <NavItem tab={Tab.AI_REPORT} label="Phân Tích AI" icon={PieChart} />
+                <NavItem 
+                  tab={Tab.DASHBOARD} 
+                  label="Tổng Quan" 
+                  icon={LayoutDashboard} 
+                  isActive={activeTab === Tab.DASHBOARD}
+                  onClick={() => handleNavClick(Tab.DASHBOARD)}
+                />
+                <NavItem 
+                  tab={Tab.INVOICES} 
+                  label="Quản Lý Hóa Đơn" 
+                  icon={FileText} 
+                  isActive={activeTab === Tab.INVOICES}
+                  onClick={() => handleNavClick(Tab.INVOICES)}
+                />
+                <NavItem 
+                  tab={Tab.AI_REPORT} 
+                  label="Phân Tích AI" 
+                  icon={PieChart} 
+                  isActive={activeTab === Tab.AI_REPORT}
+                  onClick={() => handleNavClick(Tab.AI_REPORT)}
+                />
             </nav>
         </div>
       )}
