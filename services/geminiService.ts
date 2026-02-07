@@ -2,15 +2,29 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Invoice, FinancialSummary, TransactionType, CATEGORIES } from "../types";
 import { formatCurrency } from "../utils/calculations";
 
+// Helper function to get API Key safely
+export const getApiKey = (): string | null => {
+  // 1. Check Local Storage (User entered via UI)
+  const localKey = localStorage.getItem('gemini_api_key');
+  if (localKey) return localKey;
+
+  // 2. Check Environment Variable (Vercel config)
+  if (process.env.API_KEY) return process.env.API_KEY;
+
+  return null;
+};
+
 export const generateFinancialAnalysis = async (
   invoices: Invoice[],
   summary: FinancialSummary
 ): Promise<string> => {
-  if (!process.env.API_KEY) {
-    return "Vui lòng cung cấp API Key để sử dụng tính năng phân tích AI.";
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    return "Vui lòng cấu hình API Key trong phần Cài đặt hoặc biến môi trường để sử dụng tính năng này.";
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
 
   // Prepare data context for AI with DETAILED ITEMS
   const recentTransactions = invoices.slice(0, 15).map(inv => {
@@ -53,7 +67,7 @@ export const generateFinancialAnalysis = async (
     return response.text || "Không thể tạo báo cáo vào lúc này.";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Đã xảy ra lỗi khi kết nối với AI. Vui lòng thử lại sau.";
+    return "Đã xảy ra lỗi khi kết nối với AI. Vui lòng kiểm tra lại API Key.";
   }
 };
 
@@ -82,9 +96,13 @@ const INVOICE_SCHEMA = {
 };
 
 export const parseInvoiceFromText = async (text: string): Promise<any> => {
-  if (!process.env.API_KEY) return null;
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    alert("Vui lòng nhập API Key để sử dụng tính năng này.");
+    return null;
+  }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   const today = new Date().toISOString().split('T')[0];
 
   const prompt = `
@@ -122,9 +140,13 @@ export const parseInvoiceFromText = async (text: string): Promise<any> => {
 };
 
 export const parseInvoiceFromImage = async (base64Data: string, mimeType: string): Promise<any> => {
-  if (!process.env.API_KEY) return null;
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    alert("Vui lòng nhập API Key để sử dụng tính năng này.");
+    return null;
+  }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   const today = new Date().toISOString().split('T')[0];
 
   const prompt = `

@@ -4,7 +4,7 @@ import { calculateSummary } from './utils/calculations';
 import Dashboard from './components/Dashboard';
 import TransactionManager from './components/TransactionManager';
 import AIAnalyst from './components/AIAnalyst';
-import { LayoutDashboard, FileText, PieChart, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FileText, PieChart, Menu, X, Key, Save, CheckCircle } from 'lucide-react';
 
 // Mock Data for initial view
 const MOCK_INVOICES: Invoice[] = [
@@ -108,6 +108,36 @@ const App: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>(MOCK_INVOICES);
   const [activeTab, setActiveTab] = useState<Tab>(Tab.DASHBOARD);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // API Key Management State
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [savedKey, setSavedKey] = useState(false);
+
+  useEffect(() => {
+    const storedKey = localStorage.getItem('gemini_api_key');
+    if (storedKey) {
+        setApiKey(storedKey);
+        setSavedKey(true);
+    }
+  }, []);
+
+  const handleSaveApiKey = () => {
+    if (apiKey.trim()) {
+        localStorage.setItem('gemini_api_key', apiKey.trim());
+        setSavedKey(true);
+        setShowApiKeyModal(false);
+        // Force reload might be needed if services hold onto old keys, 
+        // but in this structure, getApiKey() is called per request, so it's fine.
+        alert("Đã lưu API Key thành công!");
+    }
+  };
+
+  const handleClearKey = () => {
+      localStorage.removeItem('gemini_api_key');
+      setApiKey('');
+      setSavedKey(false);
+  };
 
   // Recalculate summary whenever invoices change
   const summary: FinancialSummary = useMemo(() => calculateSummary(invoices), [invoices]);
@@ -158,8 +188,19 @@ const App: React.FC = () => {
             onClick={() => handleNavClick(Tab.AI_REPORT)}
           />
         </nav>
-        <div className="p-4 text-xs text-slate-500 border-t border-slate-800">
-            <p>&copy; 2024 BizFinance App</p>
+        
+        {/* Settings Button */}
+        <div className="p-4 border-t border-slate-800">
+            <button 
+                onClick={() => setShowApiKeyModal(true)}
+                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${savedKey ? 'bg-slate-800 text-green-400' : 'bg-slate-800 text-slate-400 hover:text-white'}
+                `}
+            >
+                <Key size={16} />
+                {savedKey ? 'Đã có API Key' : 'Cấu hình API Key'}
+            </button>
+            <p className="text-center text-[10px] text-slate-600 mt-3">&copy; 2024 BizFinance App</p>
         </div>
       </aside>
 
@@ -199,6 +240,15 @@ const App: React.FC = () => {
                   isActive={activeTab === Tab.AI_REPORT}
                   onClick={() => handleNavClick(Tab.AI_REPORT)}
                 />
+                <div className="pt-4 mt-4 border-t border-slate-800">
+                    <button 
+                        onClick={() => { setShowApiKeyModal(true); setIsMobileMenuOpen(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
+                    >
+                        <Key size={20} />
+                        Cấu hình API Key
+                    </button>
+                </div>
             </nav>
         </div>
       )}
@@ -234,6 +284,60 @@ const App: React.FC = () => {
             )}
         </div>
       </main>
+
+      {/* API Key Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <Key className="text-blue-600" size={20} />
+                        Cấu hình Gemini API
+                    </h3>
+                    <button onClick={() => setShowApiKeyModal(false)} className="text-slate-400 hover:text-slate-600">
+                        <X size={20} />
+                    </button>
+                </div>
+                
+                <p className="text-sm text-slate-600 mb-4">
+                    Nhập khóa API Google Gemini của bạn để kích hoạt các tính năng phân tích thông minh và trích xuất hóa đơn.
+                </p>
+
+                <div className="mb-4">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Gemini API Key</label>
+                    <input 
+                        type="password"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Dán khóa API của bạn vào đây (AIza...)"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                    />
+                    <div className="mt-1 text-xs text-right">
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">
+                            Lấy API Key tại đây &rarr;
+                        </a>
+                    </div>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                    {savedKey && (
+                        <button 
+                            onClick={handleClearKey}
+                            className="px-4 py-2 text-rose-600 hover:bg-rose-50 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Xóa Key
+                        </button>
+                    )}
+                    <button 
+                        onClick={handleSaveApiKey}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                        <Save size={16} /> Lưu Cài Đặt
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
